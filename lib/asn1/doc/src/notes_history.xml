@@ -559,7 +559,6 @@
         <item>
           <p>The earlier exit caused by bad in-data is now fixed so it will
             return an {error,Reason} tuple.</p>
-            return an {error,Reason} tuple.</p>
           <p>Own Id: OTP-4797</p>
         </item>
         <item>
