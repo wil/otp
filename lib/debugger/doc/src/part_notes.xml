@@ -34,7 +34,7 @@
       can be set, code can be single stepped and variable values can be
       displayed and changed.</p>
   </description>
-  <xi:include href="notes.xml">
+  <xi:include href="notes.xml" />
 </part>
 
 
