@@ -88,6 +88,23 @@
       </desc>
     </func>
     <func>
+      <name>re(RegExp)</name>
+      <fsummary>Search the reports for a regular expression</fsummary>
+      <type>
+        <v>RegExp = Opaque datatype containing a compiled regular expression.</v>
+      </type>
+      <desc>
+        <p>All reports containing the regular expression <c>RegExp</c>
+          are printed.
+          </p>
+        <p><c>RegExp</c> is an opaque datatype that can be obtained by
+	  calling <c>re:compile/1</c> or <c>re:compile/2</c>. Refer to
+	  the module <c>re</c> for more information on the usage of
+	  compiled regular expressions.
+        </p>
+      </desc>
+    </func>
+    <func>
       <name>rescan()</name>
       <name>rescan(Options)</name>
       <fsummary>Rescan the report directory</fsummary>

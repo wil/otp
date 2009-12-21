@@ -22,7 +22,7 @@
 
 %% External exports
 -export([start/0, start/1, stop/0, rescan/0, rescan/1]).
--export([list/0, list/1, show/0, show/1, grep/1, start_log/1, stop_log/0]).
+-export([list/0, list/1, show/0, show/1, grep/1, re/1, start_log/1, stop_log/0]).
 -export([h/0, help/0]).
 
 %% Internal exports
@@ -73,6 +73,8 @@ show(Type) when is_atom(Type) ->
 
 grep(RegExp) -> gen_server:call(rb_server, {grep, RegExp}, infinity).
 
+re(RegExp) -> gen_server:call(rb_server, {re, RegExp}, infinity).
+
 start_log(FileName) -> gen_server:call(rb_server, {start_log, FileName}).
 
 stop_log() -> gen_server:call(rb_server, stop_log).
@@ -91,6 +93,9 @@ help() ->
     io:format("      currently supported types are:~n"),
     print_types(),
     io:format("rb:grep(RegExp)    - print reports containing RegExp~n"),
+    io:format("rb:re(RegExp)      - print reports containing RegExp.~n"),
+    io:format("                     RegExp must be obtained using ~n"),
+    io:format("                     re:compile/1 or re:compile/2.~n"),
     io:format("rb:rescan()        - rescans the report directory with same~n"),
     io:format("                     options.~n"),
     io:format("rb:rescan(Options) - rescans the report directory with new~n"),
@@ -191,6 +196,10 @@ handle_call(show, _From, State) ->
 handle_call({grep, RegExp}, _From, State) ->
     #state{dir = Dir, data = Data, device = Device, abort = Abort, log = Log} = State,
     NewDevice = print_grep_reports(Dir, Data, RegExp, Device, Abort, Log),
+    {reply, ok, State#state{device = NewDevice}};
+handle_call({re, RegExp}, _From, State) ->
+    #state{dir = Dir, data = Data, device = Device, abort = Abort, log = Log} = State,
+    NewDevice = print_re_reports(Dir, Data, RegExp, Device, Abort, Log),
     {reply, ok, State#state{device = NewDevice}}.
 
 terminate(_Reason, #state{device = Device}) ->
@@ -631,6 +640,49 @@ check_rep(Fd, FilePosition, Device, RegExp, Number, Abort, Log) ->
 			_ ->
 			    {proceed,Device}
 		    end;		
+		_ ->
+		    {proceed,Device}
+	    end;
+	_ ->
+	    io:format("rb: Cannot read from file~n"),
+	    {proceed,Device}
+    end.
+
+print_re_reports(_Dir, [], _RegExp, Device, _Abort, _Log) ->
+    Device;
+print_re_reports(Dir, Data, RegExp, Device, Abort, Log) ->
+    {Next,Device1} = print_re_report(Dir, Data, element(1, hd(Data)),
+				       Device, RegExp, Abort, Log),
+    if Next == abort ->
+	    Device1;
+       true ->
+	    print_re_reports(Dir, tl(Data), RegExp, Device1, Abort, Log)
+    end.
+
+print_re_report(Dir, Data, Number, Device, RegExp, Abort, Log) ->
+    {Fname, FilePosition} = find_report(Data, Number),
+    FileName = lists:concat([Dir, Fname]),
+    case file:open(FileName, [read]) of
+	{ok, Fd} when is_pid(Fd) ->
+	    check_re_rep(Fd, FilePosition, Device, RegExp, Number, Abort, Log);
+	_ ->
+	    io:format("rb: can't open file ~p~n", [Fname]),
+	    {proceed,Device}
+    end.
+
+check_re_rep(Fd, FilePosition, Device, RegExp, Number, Abort, Log) ->
+    case read_rep_msg(Fd, FilePosition) of
+	{Date, Msg} ->
+	    MsgStr = lists:flatten(io_lib:format("~p",[Msg])),
+	    case re:run(MsgStr, RegExp) of
+		{match, _} ->
+		    io:format("Found match in report number ~w~n", [Number]),
+		    case catch rb_format_supp:print(Date, Msg, Device) of
+			{'EXIT', _} ->
+			    handle_bad_form(Date, Msg, Device, Abort, Log);
+			_ ->
+			    {proceed,Device}
+		    end;
 		_ ->
 		    {proceed,Device}
 	    end;
