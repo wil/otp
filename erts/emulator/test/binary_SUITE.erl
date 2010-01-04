@@ -27,6 +27,7 @@
 %%	binary_to_list/1
 %%	binary_to_list/3
 %%	binary_to_term/1
+%%  binary_to_term/2
 %%      bitstr_to_list/1
 %%	term_to_binary/1
 %%      erlang:external_size/1
@@ -49,7 +50,7 @@
 	 t_hash/1,
 	 bad_size/1,
 	 bad_term_to_binary/1,
-	 bad_binary_to_term_2/1,
+	 bad_binary_to_term_2/1,bad_binary_to_term2/1,
 	 bad_binary_to_term/1, bad_terms/1, more_bad_terms/1,
 	 otp_5484/1,otp_5933/1,
 	 ordering/1,unaligned_order/1,gc_test/1,
@@ -537,6 +538,16 @@ bad_binary_to_term(Config) when is_list(Config) ->
 
 bad_bin_to_term(BadBin) ->
     {'EXIT',{badarg,_}} = (catch binary_to_term(BadBin)).
+
+bad_bin_to_term(BadBin,Opts) ->
+    {'EXIT',{badarg,_}} = (catch binary_to_term(BadBin,Opts)).
+
+safe_binary_to_term2(doc) -> "Test safety options for binary_to_term/2";
+safe_binary_to_term2(Config) when is_list(Config) ->
+    ?line bad_bin_to_term(<<131,100,0,14,"undefined_atom">>,[safe]),
+    ?line bad_bin_to_term(term_to_binary(fun () -> ok end), [safe]),
+    ?line bad_bin_to_term(term_to_binary(make_ref()),       [safe]),
+    ?line bad_bin_to_term(term_to_binary(self()),           [safe]).
 
 %% Tests bad input to binary_to_term/1.
 

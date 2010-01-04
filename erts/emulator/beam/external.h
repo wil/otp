@@ -131,6 +131,9 @@ typedef struct {
     int exttmp;
 } ErtsBinary2TermState;
 
+/* Possible flags used to control term decoding (dec_term) */
+#define BTT_SAFE 1
+
 /* -------------------------------------------------------------------------- */
 
 void erts_init_atom_cache_map(ErtsAtomCacheMap *);
