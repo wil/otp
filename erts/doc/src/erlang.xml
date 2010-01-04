@@ -347,6 +347,25 @@ iolist() = [char() | binary() | iolist()]
       </desc>
     </func>
     <func>
+      <name>binary_to_term(Binary,Opts) -> term()</name>
+      <fsummary>Decode an Erlang external term format binary</fsummary>
+      <type>
+        <v>Opts = [safe]</v>
+        <v>Binary = ext_binary()</v>
+      </type>
+      <desc>
+        <p>As <c>binary_to_term/1</c>, but takes options that affect decoding
+           of the binary.  If the <c>safe</c> option is supplied, precautions
+           are taken to ensure that atoms are not leaked, and data types that
+           can be abused are not created (functions, pids, references). See
+           also
+           <seealso marker="#term_to_binary/1">term_to_binary/1</seealso>,
+           <seealso marker="#binary_to_term/1">binary_to_term/1</seealso>,
+           and <seealso marker="#list_to_existing_binary/1">
+             list_to_existing_binary/1</seealso>.</p>
+      </desc>
+    </func>
+    <func>
       <name>bit_size(Bitstring) -> int()</name>
       <fsummary>Return the size of a bitstring</fsummary>
       <type>
